@@ -1770,8 +1770,261 @@ const sectionsEl = document.getElementById('sections');
 const searchInput = document.getElementById('topic-search');
 const searchClear = document.getElementById('search-clear');
 const emptyState = document.getElementById('empty-state');
+const levelButtons = [...document.querySelectorAll('[data-level-filter]')];
 const navButtons = [];
 let activeSectionId = sections[0].id;
+let activeLevel = 'all';
+
+const sectionLevels = {
+  basics: 'beginner',
+  control: 'beginner',
+  funcs: 'beginner',
+  types: 'beginner',
+  collections: 'beginner',
+  pointers: 'intermediate',
+  errors: 'intermediate',
+  concurrency: 'intermediate',
+  generics: 'intermediate',
+  io: 'beginner',
+  json: 'beginner',
+  http: 'intermediate',
+  testing: 'intermediate',
+  modules: 'beginner',
+  patterns: 'advanced',
+  stdlib: 'intermediate',
+  advanced: 'advanced',
+};
+
+const playgroundExamples = {
+  'Program structure': `package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	fmt.Println("Hello, Go")
+	fmt.Println("Args:", os.Args[1:])
+}
+`,
+  'Constants & iota': `package main
+
+import "fmt"
+
+type Direction int
+
+const (
+	North Direction = iota
+	East
+	South
+	West
+)
+
+const (
+	Read = 1 << iota
+	Write
+	Exec
+)
+
+func main() {
+	fmt.Println(North, East, South, West)
+	fmt.Println(Read, Write, Exec)
+}
+`,
+  'for loops': `package main
+
+import "fmt"
+
+func main() {
+	for i := 0; i < 3; i++ {
+		fmt.Println("classic", i)
+	}
+
+	n := 3
+	for n > 0 {
+		fmt.Println("while-style", n)
+		n--
+	}
+
+	for i, v := range []string{"go", "is", "fun"} {
+		fmt.Println(i, v)
+	}
+}
+`,
+  'switch': `package main
+
+import "fmt"
+
+func describe(x int) string {
+	switch {
+	case x < 0:
+		return "negative"
+	case x == 0:
+		return "zero"
+	default:
+		return "positive"
+	}
+}
+
+func main() {
+	fmt.Println(describe(-2))
+	fmt.Println(describe(0))
+	fmt.Println(describe(7))
+}
+`,
+  'Slices': `package main
+
+import "fmt"
+
+func main() {
+	nums := []int{1, 2, 3}
+	nums = append(nums, 4, 5)
+
+	firstTwo := nums[:2]
+	rest := nums[2:]
+
+	fmt.Println(nums)
+	fmt.Println(firstTwo)
+	fmt.Println(rest)
+	fmt.Println("len/cap:", len(nums), cap(nums))
+}
+`,
+  'Maps': `package main
+
+import "fmt"
+
+func main() {
+	ages := map[string]int{
+		"gopher": 15,
+		"tux":    30,
+	}
+
+	ages["duke"] = 28
+	age, ok := ages["gopher"]
+
+	fmt.Println(age, ok)
+	for name, age := range ages {
+		fmt.Println(name, age)
+	}
+}
+`,
+  'Error basics': `package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+func divide(a, b int) (int, error) {
+	if b == 0 {
+		return 0, errors.New("divide by zero")
+	}
+	return a / b, nil
+}
+
+func main() {
+	result, err := divide(10, 0)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+	fmt.Println(result)
+}
+`,
+  'Goroutines': `package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func main() {
+	var wg sync.WaitGroup
+
+	for i := 1; i <= 3; i++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			fmt.Println("worker", id)
+		}(i)
+	}
+
+	wg.Wait()
+}
+`,
+  'Channels': `package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan string)
+
+	go func() {
+		ch <- "hello from a goroutine"
+		close(ch)
+	}()
+
+	for msg := range ch {
+		fmt.Println(msg)
+	}
+}
+`,
+  'Encoding / Decoding': `package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type User struct {
+	ID   int    \`json:"id"\`
+	Name string \`json:"name"\`
+}
+
+func main() {
+	data := []byte(\`{"id":1,"name":"Layla"}\`)
+
+	var user User
+	if err := json.Unmarshal(data, &user); err != nil {
+		panic(err)
+	}
+
+	out, _ := json.MarshalIndent(user, "", "  ")
+	fmt.Println(string(out))
+}
+`,
+  'Unit tests': `package main
+
+import "testing"
+
+func add(a, b int) int {
+	return a + b
+}
+
+func TestAdd(t *testing.T) {
+	if got := add(2, 3); got != 5 {
+		t.Fatalf("add(2, 3) = %d, want 5", got)
+	}
+}
+`,
+  'strings package': `package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func main() {
+	text := "go,java,python"
+	parts := strings.Split(text, ",")
+
+	fmt.Println(parts)
+	fmt.Println(strings.Contains(text, "go"))
+	fmt.Println(strings.ToUpper("gopher"))
+}
+`,
+};
 
 function setActiveSection(sectionId) {
   activeSectionId = sectionId;
@@ -1782,12 +2035,25 @@ function setActiveSection(sectionId) {
   });
 }
 
+function setActiveLevel(level) {
+  activeLevel = level;
+  levelButtons.forEach(button => {
+    button.classList.toggle('active', button.dataset.levelFilter === level);
+  });
+}
+
+function clearFilters() {
+  searchInput.value = '';
+  setActiveLevel('all');
+  resetFilters();
+}
+
 sections.forEach((s, i) => {
   const btn = document.createElement('button');
   btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
   btn.textContent = s.label;
   btn.onclick = () => {
-    clearSearch();
+    clearFilters();
     setActiveSection(s.id);
   };
   navButtons.push({ button: btn, id: s.id, label: s.label.toLowerCase() });
@@ -1798,10 +2064,14 @@ sections.forEach((s, i) => {
   div.className = 'section' + (i === 0 ? ' active' : '');
   div.innerHTML = s.content;
   div.dataset.sectionLabel = s.label.toLowerCase();
+  div.dataset.level = sectionLevels[s.id] || 'intermediate';
+  div.querySelectorAll('.card').forEach(card => {
+    card.dataset.level = div.dataset.level;
+  });
   sectionsEl.appendChild(div);
 });
 
-function resetSearchResults() {
+function resetFilters() {
   document.querySelectorAll('.section').forEach(section => {
     section.classList.remove('search-match');
   });
@@ -1812,51 +2082,65 @@ function resetSearchResults() {
     button.hidden = false;
   });
   emptyState.hidden = true;
-  searchClear.hidden = true;
+  searchClear.hidden = !searchInput.value;
   setActiveSection(activeSectionId);
 }
 
 function clearSearch() {
   if (!searchInput.value) return;
   searchInput.value = '';
-  resetSearchResults();
+  applyFilters();
 }
 
-function applySearch() {
+function applyFilters() {
   const query = searchInput.value.trim().toLowerCase();
+  const hasFilters = query || activeLevel !== 'all';
 
-  if (!query) {
-    resetSearchResults();
+  if (!hasFilters) {
+    resetFilters();
     return;
   }
 
   let matchCount = 0;
-  searchClear.hidden = false;
+  searchClear.hidden = !query;
 
   navButtons.forEach(({ button, id, label }) => {
     const section = document.getElementById('sec-' + id);
-    const sectionMatches = label.includes(query) || section.textContent.toLowerCase().includes(query);
+    let visibleCards = 0;
 
-    button.hidden = !sectionMatches;
     button.classList.remove('active');
     section.classList.remove('active');
-    section.classList.toggle('search-match', sectionMatches);
 
     section.querySelectorAll('.card').forEach(card => {
-      const cardMatches = label.includes(query) || card.textContent.toLowerCase().includes(query);
-      card.hidden = !cardMatches;
-      if (cardMatches) matchCount += 1;
+      const levelMatches = activeLevel === 'all' || card.dataset.level === activeLevel;
+      const queryMatches = !query || label.includes(query) || card.textContent.toLowerCase().includes(query);
+      const isVisible = levelMatches && queryMatches;
+
+      card.hidden = !isVisible;
+      if (isVisible) {
+        visibleCards += 1;
+        matchCount += 1;
+      }
     });
+
+    button.hidden = visibleCards === 0;
+    section.classList.toggle('search-match', visibleCards > 0);
   });
 
   emptyState.hidden = matchCount > 0;
 }
 
-searchInput.addEventListener('input', applySearch);
+searchInput.addEventListener('input', applyFilters);
 searchClear.addEventListener('click', () => {
   clearSearch();
-  setActiveSection(sections[0].id);
   searchInput.focus();
+});
+
+levelButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    setActiveLevel(button.dataset.levelFilter);
+    applyFilters();
+  });
 });
 
 async function copyText(text) {
@@ -1876,38 +2160,67 @@ async function copyText(text) {
   textarea.remove();
 }
 
-function addCopyButtons() {
+function setTemporaryButtonState(button, text, className = 'copied') {
+  const originalText = button.textContent;
+  button.textContent = text;
+  button.classList.add(className);
+
+  window.setTimeout(() => {
+    button.textContent = originalText;
+    button.classList.remove(className);
+  }, 1200);
+}
+
+function addSnippetActions() {
   document.querySelectorAll('pre').forEach((pre) => {
+    const cardTitle = pre.closest('.card')?.querySelector('.card-title')?.textContent.trim();
+    const runnableCode = playgroundExamples[cardTitle];
     const wrapper = document.createElement('div');
     wrapper.className = 'code-block';
 
-    const button = document.createElement('button');
-    button.className = 'copy-btn';
-    button.type = 'button';
-    button.textContent = 'Copy';
-    button.setAttribute('aria-label', 'Copy code snippet');
+    const actions = document.createElement('div');
+    actions.className = 'snippet-actions';
+
+    const copyButton = document.createElement('button');
+    copyButton.className = 'copy-btn';
+    copyButton.type = 'button';
+    copyButton.textContent = 'Copy';
+    copyButton.setAttribute('aria-label', 'Copy code snippet');
+    actions.appendChild(copyButton);
+
+    if (runnableCode) {
+      const runButton = document.createElement('button');
+      runButton.className = 'run-btn';
+      runButton.type = 'button';
+      runButton.textContent = 'Run';
+      runButton.setAttribute('aria-label', 'Copy runnable example and open Go Playground');
+      actions.appendChild(runButton);
+
+      runButton.addEventListener('click', async () => {
+        try {
+          await copyText(runnableCode.trim());
+          setTemporaryButtonState(runButton, 'Copied');
+        } catch {
+          setTemporaryButtonState(runButton, 'Failed');
+        }
+
+        window.open('https://go.dev/play/', '_blank', 'noopener');
+      });
+    }
 
     pre.parentNode.insertBefore(wrapper, pre);
     wrapper.appendChild(pre);
-    wrapper.appendChild(button);
+    wrapper.appendChild(actions);
 
-    button.addEventListener('click', async () => {
-      const originalText = button.textContent;
-
+    copyButton.addEventListener('click', async () => {
       try {
         await copyText(pre.textContent.trim());
-        button.textContent = 'Copied';
-        button.classList.add('copied');
+        setTemporaryButtonState(copyButton, 'Copied');
       } catch {
-        button.textContent = 'Failed';
+        setTemporaryButtonState(copyButton, 'Failed');
       }
-
-      window.setTimeout(() => {
-        button.textContent = originalText;
-        button.classList.remove('copied');
-      }, 1200);
     });
   });
 }
 
-addCopyButtons();
+addSnippetActions();
