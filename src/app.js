@@ -1,5 +1,6 @@
 function initApp() {
   const sections = window.cheatSheetSections;
+  const notes = window.cheatSheetNotes;
   const playgroundExamples = window.cheatSheetPlaygroundExamples;
   const sectionLevels = window.cheatSheetSectionLevels;
   const { copyText, formatLevel, setTemporaryButtonState, slugify } = window.cheatSheetUtils;
@@ -20,10 +21,13 @@ themeToggle.onclick = () => setTheme(document.documentElement.dataset.theme === 
 
 const nav = document.getElementById('nav');
 const sectionsEl = document.getElementById('sections');
+const notesView = document.getElementById('notes-view');
+const toolbar = document.querySelector('.toolbar');
 const searchInput = document.getElementById('topic-search');
 const searchClear = document.getElementById('search-clear');
 const emptyState = document.getElementById('empty-state');
 const resultStatus = document.getElementById('result-status');
+const viewTabs = [...document.querySelectorAll('[data-view]')];
 const levelButtons = [...document.querySelectorAll('[data-level-filter]')];
 const navButtons = [];
 let activeSectionId = sections[0].id;
@@ -82,6 +86,56 @@ function renderSections() {
     });
     sectionsEl.appendChild(div);
   });
+}
+
+function renderNotesView(viewName) {
+  const viewLabels = {
+    fieldNotes: 'Field Notes',
+    idioms: 'Idioms',
+    gotchas: 'Gotchas',
+  };
+  const intros = {
+    fieldNotes: 'Cleaned-up learning notes from the journey: mental models, web app flow, and practical reminders that do not belong in a terse cheat sheet.',
+    idioms: 'Style and convention notes that make Go code feel more natural in reviews and real projects.',
+    gotchas: 'Small traps and behavior notes that are easy to forget while learning Go.',
+  };
+  const cards = notes[viewName] || [];
+
+  notesView.innerHTML = `
+    <p class="notes-intro">${intros[viewName]}</p>
+    <div class="notes-grid">
+      ${cards.map(card => `
+        <article class="note-card">
+          <h2>${card.title}</h2>
+          <div class="note-tags">
+            ${card.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+          ${card.body}
+        </article>
+      `).join('')}
+    </div>
+  `;
+  notesView.setAttribute('aria-label', viewLabels[viewName]);
+}
+
+function setActiveView(viewName) {
+  const isCheatSheet = viewName === 'cheatsheet';
+
+  viewTabs.forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.view === viewName);
+  });
+
+  toolbar.hidden = !isCheatSheet;
+  emptyState.hidden = true;
+  sectionsEl.hidden = !isCheatSheet;
+  notesView.hidden = isCheatSheet;
+
+  if (isCheatSheet) {
+    clearFilters();
+    return;
+  }
+
+  renderNotesView(viewName);
 }
 
 function addCardMetadata() {
@@ -201,6 +255,14 @@ function bindFilterControls() {
   });
 }
 
+function bindViewTabs() {
+  viewTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      setActiveView(tab.dataset.view);
+    });
+  });
+}
+
 function openCardFromHash() {
   const cardId = window.location.hash.slice(1);
   if (!cardId) return;
@@ -270,6 +332,7 @@ renderSections();
 addCardMetadata();
 addSnippetActions();
 bindFilterControls();
+bindViewTabs();
 openCardFromHash();
   window.addEventListener('hashchange', openCardFromHash);
 }

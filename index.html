@@ -22,6 +22,13 @@
       </div>
     </header>
 
+    <div class="view-tabs" aria-label="Learning hub views">
+      <button class="view-tab active" type="button" data-view="cheatsheet">Cheat Sheet</button>
+      <button class="view-tab" type="button" data-view="fieldNotes">Field Notes</button>
+      <button class="view-tab" type="button" data-view="idioms">Idioms</button>
+      <button class="view-tab" type="button" data-view="gotchas">Gotchas</button>
+    </div>
+
     <div class="toolbar">
       <div class="search-panel">
         <label class="search-label" for="topic-search">Search topics</label>
@@ -43,10 +50,12 @@
     </div>
     <p class="empty-state" id="empty-state" hidden>No matching topics found.</p>
     <div id="sections"></div>
+    <div class="notes-view" id="notes-view" hidden></div>
   </main>
 
   <script src="src/data/sections.js"></script>
   <script src="src/data/metadata.js"></script>
+  <script src="src/data/notes.js"></script>
   <script src="src/utils.js"></script>
   <script src="src/app.js"></script>
   <script src="script.js"></script>

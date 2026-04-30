@@ -19,6 +19,10 @@
   .go-logo{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;color:var(--go-cyan);letter-spacing:-2px}
   .header h1{font-size:1.65rem;font-weight:750;letter-spacing:0}
   .header p{font-size:.85rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .view-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+  .view-tab{font-family:'JetBrains Mono',monospace;font-size:.76rem;padding:8px 12px;border-radius:6px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .15s}
+  .view-tab:hover{border-color:var(--go-cyan);color:var(--go-dark)}
+  .view-tab.active{background:var(--go-cyan);border-color:var(--go-cyan);color:#fff}
   .toolbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(14px);border-bottom:0.5px solid var(--border);padding:.75rem 0 1rem;margin-bottom:1.25rem}
   .search-panel{margin-bottom:1rem}
   .search-label{display:block;font-family:'JetBrains Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.35rem}
@@ -63,6 +67,14 @@
   .tag{font-family:'JetBrains Mono',monospace;font-size:.62rem;line-height:1;padding:4px 6px;border-radius:999px;border:0.5px solid var(--border2);color:var(--muted);background:var(--bg)}
   .tag-level{color:var(--go-dark);border-color:var(--go-cyan);background:var(--go-light)}
   html[data-theme="dark"] .tag-level{color:var(--go-cyan)}
+  .notes-view{animation:fadeIn .2s ease}
+  .notes-intro{margin-bottom:1rem;color:var(--muted);font-size:.9rem;line-height:1.6;max-width:760px}
+  .notes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
+  .note-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:1rem}
+  .note-card h2{font-size:.9rem;color:var(--go-cyan);font-family:'JetBrains Mono',monospace;margin-bottom:.55rem}
+  .note-card p,.note-card li{font-size:.86rem;line-height:1.65;color:var(--muted)}
+  .note-card ul,.note-card ol{padding-left:1.1rem;margin:.45rem 0}
+  .note-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.75rem}
   .code-block{position:relative;margin:.5rem 0}
   .code-block pre{margin:0;padding-right:7.8rem}
   pre{font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:1.6;white-space:pre;overflow-x:auto;background:var(--bg3);border-radius:6px;padding:.8rem;border:0.5px solid var(--border);margin:.5rem 0}
