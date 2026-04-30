@@ -1,8 +1,10 @@
 function initApp() {
   const sections = window.cheatSheetSections;
   const notes = window.cheatSheetNotes;
+  const ui = window.cheatSheetUi;
   const playgroundExamples = window.cheatSheetPlaygroundExamples;
   const sectionLevels = window.cheatSheetSectionLevels;
+  const studyPack = window.cheatSheetStudyPack;
   const { copyText, formatLevel, setTemporaryButtonState, slugify } = window.cheatSheetUtils;
 
   const themeToggle = document.getElementById('theme-toggle');
@@ -16,67 +18,6 @@ let activeMode = storedMode || 'light';
 let activeStyle = storedStyle || 'classic';
 let mascotEnabled = localStorage.getItem('go-cheatsheet-mascot') === 'true';
 let mascotTimer;
-
-const mascotMessages = [
-  'Tiny progress still counts.',
-  'You are building your own map. That matters.',
-  'One concept at a time.',
-  'Future you will love these notes.',
-  'Clean code starts with clear thoughts.',
-  'You do not need to know everything to keep going.',
-  'Small refactors are real wins.',
-  'Your curiosity is doing the heavy lifting.',
-  'Pause, breathe, then run it again.',
-  'Every confusing thing becomes a note eventually.',
-
-  'You are allowed to learn slowly. 🐢',
-  'The bug is not stronger than you.',
-  'Today’s confusion is tomorrow’s “ohhh”.',
-  'Write the messy note first. Polish later.',
-  'You showed up. That already counts.',
-  'One little commit is still a commit. 🌱',
-  'Your brain is compiling. Please wait...',
-  'Go gently. You are still learning.',
-  'A tiny note today can save future you an hour.',
-  'Not knowing yet is part of the process.',
-  'You are debugging more than code. You are debugging understanding.',
-  'This is hard, and you are doing it anyway.',
-  'Small steps. Big brain. Tiny gopher. 🐹',
-  'Your notes do not have to be perfect to be useful.',
-  'Every expert has a graveyard of confused notes.',
-  'Take the break. The code will still be here.',
-  'You are collecting little pieces of clarity.',
-  'Learning is just being confused more gracefully over time.',
-  'This page exists because you cared enough to write it.',
-  'The mascot believes in you. Obviously.',
-  'Progress is progress, even when it feels invisible.',
-  'One paragraph is better than a forgotten thought.',
-  'You are making the internet a little more helpful.',
-  'Document the chaos. Future you will decode it.',
-  'You are closer than when you opened this page.',
-  'Do not fear the red error text. It is just feedback.',
-  'Run it again. Maybe it was shy.',
-  'You are doing better than you think. :\')',
-  'Learning in public is brave.',
-  'A clear note is a gift to your future self.',
-  'The gopher says: hydrate and keep going. 💧',
-  'Confused? Perfect. That means there is something to learn.',
-  'Your effort is not wasted.',
-  'One solved problem becomes one less scary problem.',
-  'Keep going, little architect. 🛠️',
-  'You are turning “what?” into “got it.”',
-  'The best notes are written by someone who remembers being confused.',
-  'You do not need a perfect brain day to make progress.',
-  'Even 10 minutes can move the needle.',
-  'The bug blinked first.',
-  'You are building proof that you can figure things out.',
-  'Soft reminder: save your work. 💾',
-  'This is your little knowledge garden. 🌿',
-  'You are not behind. You are becoming.',
-  'A messy draft is a living draft.',
-  'The gopher has inspected your work and says: nice.',
-  'One day, this will feel obvious. Today is the bridge.',
-];
 
 function setTheme(style, mode) {
   activeStyle = style;
@@ -107,7 +48,7 @@ function positionMascot() {
 function showMascotMoment() {
   if (!mascotEnabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  mascotMessage.textContent = mascotMessages[Math.floor(Math.random() * mascotMessages.length)];
+  mascotMessage.textContent = ui.mascotMessages[Math.floor(Math.random() * ui.mascotMessages.length)];
   positionMascot();
   mascotPop.hidden = false;
   window.setTimeout(() => {
@@ -217,53 +158,27 @@ function renderSections() {
 
 function renderNotesView(viewName) {
   if (viewName === 'about') {
+    const about = ui.about;
     notesView.innerHTML = `
-      <p class="notes-intro">This started as a Go cheat sheet, then grew into a small learning hub: quick reference, personal notes, runnable examples, and Markdown export for people who like to keep obsidian notes (or any kind of notes) like me.</p>
+      <p class="notes-intro">${about.intro}</p>
       <div class="about-list">
-        <article class="about-item">
-          <h2>Search, filters, and sections</h2>
-          <p>Use search when you know what you want, difficulty filters when you want a learning-level view, and section chips when you want to browse by topic. Every card has a difficulty level and a section label.</p>
-        </article>
-        <article class="about-item">
-          <h2>Copy and Run</h2>
-          <p>Copy grabs the visible snippet. Run is only shown on examples that have a complete runnable version; it copies that version and opens the Go Playground (you still need to paste it yourself!).</p>
-        </article>
-        <article class="about-item">
-          <h2>Shareable topic links</h2>
-          <p>The small # beside a card title creates a direct link to that topic, so you can save or share one exact card instead of pointing someone at the whole page.</p>
-        </article>
-        <article class="about-item">
-          <h2>Study packs</h2>
-          <p>Select cards or notes, then download them as one Markdown file. The idea is to make a portable study bundle that works nicely with Obsidian, GitHub, or any note-taking app that understands Markdown.</p>
-        </article>
-        <article class="about-item">
-          <h2>Field notes, idioms, and gotchas</h2>
-          <p>The extra tabs are curated from my own learning notes.</p>
-        </article>
-        <article class="about-item">
-          <h2>Themes</h2>
-          <p>Just to make things a bit cuter :3</p>
-        </article>
+        ${about.items.map(item => `
+          <article class="about-item">
+            <h2>${item.title}</h2>
+            <p>${item.body}</p>
+          </article>
+        `).join('')}
       </div>
     `;
-    notesView.setAttribute('aria-label', 'About this Go learning hub');
+    notesView.setAttribute('aria-label', about.label);
     return;
   }
 
-  const viewLabels = {
-    fieldNotes: 'Field Notes',
-    idioms: 'Idioms',
-    gotchas: 'Gotchas',
-  };
-  const intros = {
-    fieldNotes: 'Cleaned-up general learning notes, directly pulled from my personal Obsidian note collection.',
-    idioms: 'Style and convention notes that make Go code feel more natural in reviews and real projects, also from my personal notes but focused on common patterns rather than language features.',
-    gotchas: 'Again from my obsidian notes xD. Small traps and behavior notes that are easy to forget while learning Go.',
-  };
+  const viewMeta = ui.notesViews[viewName];
   const cards = notes[viewName] || [];
 
   notesView.innerHTML = `
-    <p class="notes-intro">${intros[viewName]}</p>
+    <p class="notes-intro">${viewMeta.intro}</p>
     <div class="notes-grid">
       ${cards.map(card => `
         <article class="note-card" data-study-type="${viewName}" data-study-title="${card.title}" data-study-tags="${card.tags.join(',')}">
@@ -276,7 +191,7 @@ function renderNotesView(viewName) {
       `).join('')}
     </div>
   `;
-  notesView.setAttribute('aria-label', viewLabels[viewName]);
+  notesView.setAttribute('aria-label', viewMeta.label);
   addStudySelectors(notesView);
 }
 
@@ -370,7 +285,7 @@ function addStudySelectors(root = document) {
         studyPackItems.delete(id);
         syncStudySelector(button, false);
       } else {
-        studyPackItems.set(id, getStudyPackItem(item));
+        studyPackItems.set(id, studyPack.getItem(item));
         syncStudySelector(button, true);
       }
       updateStudyPackBar();
@@ -380,66 +295,8 @@ function addStudySelectors(root = document) {
   });
 }
 
-function escapeMarkdown(text) {
-  return text.replace(/#/g, '\\#');
-}
-
-function getStudyPackItem(item) {
-  return {
-    title: item.dataset.studyTitle || item.querySelector('.card-title, h2')?.textContent.trim(),
-    type: item.dataset.studyType || 'Go Note',
-    tags: (item.dataset.studyTags || '')
-      .split(',')
-      .map(tag => tag.trim().toLowerCase().replace(/\s+/g, '-'))
-      .filter(Boolean),
-    content: htmlToMarkdown(item),
-  };
-}
-
-function htmlToMarkdown(element) {
-  const clone = element.cloneNode(true);
-  clone.querySelectorAll('button, .snippet-actions, .card-link').forEach(node => node.remove());
-  clone.querySelectorAll('pre').forEach(pre => {
-    pre.replaceWith(document.createTextNode(`\n\n\`\`\`go\n${pre.textContent.trim()}\n\`\`\`\n\n`));
-  });
-  clone.querySelectorAll('code').forEach(code => {
-    code.replaceWith(document.createTextNode(`\`${code.textContent}\``));
-  });
-  clone.querySelectorAll('li').forEach(li => {
-    li.prepend(document.createTextNode('- '));
-    li.append(document.createTextNode('\n'));
-  });
-  clone.querySelectorAll('p,h2,ol,ul,div').forEach(node => {
-    node.append(document.createTextNode('\n'));
-  });
-  return clone.textContent
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
-function buildStudyPackMarkdown() {
-  const created = new Date().toISOString().slice(0, 10);
-  const sections = [...studyPackItems.values()].map(item => {
-    const tagLine = ['go', ...item.tags].map(tag => `#${tag}`).join(' ');
-
-    return `## ${escapeMarkdown(item.title)}\n\n> Source: ${item.type}\n> Tags: ${tagLine}\n\n${item.content}`;
-  });
-
-  return `# Go Study Pack\n\nCreated: ${created}\nTags: #go #study-pack\n\n${sections.join('\n\n---\n\n')}\n`;
-}
-
 function downloadStudyPack() {
-  if (studyPackItems.size === 0) return;
-
-  const blob = new Blob([buildStudyPackMarkdown()], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'go-study-pack.md';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  studyPack.download(studyPackItems);
 }
 
 function clearStudyPack() {
