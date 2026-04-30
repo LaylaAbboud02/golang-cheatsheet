@@ -28,6 +28,7 @@
             </select>
           </label>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Dark</button>
+          <button class="mascot-toggle" id="mascot-toggle" type="button" aria-pressed="false">Mascot</button>
         </div>
       </div>
     </header>
@@ -70,6 +71,10 @@
     <p class="empty-state" id="empty-state" hidden>No matching topics found.</p>
     <div id="sections"></div>
     <div class="notes-view" id="notes-view" hidden></div>
+    <div class="mascot-pop" id="mascot-pop" aria-live="polite" hidden>
+      <div class="mascot-bubble" id="mascot-message"></div>
+      <img class="mascot-image" src="assets/go-gopher.png" alt="Go gopher mascot">
+    </div>
   </main>
 
   <script src="src/data/sections.js"></script>

@@ -7,10 +7,76 @@ function initApp() {
 
   const themeToggle = document.getElementById('theme-toggle');
 const themeStyle = document.getElementById('theme-style');
+const mascotToggle = document.getElementById('mascot-toggle');
+const mascotPop = document.getElementById('mascot-pop');
+const mascotMessage = document.getElementById('mascot-message');
 const storedMode = localStorage.getItem('go-cheatsheet-theme-mode') || localStorage.getItem('go-cheatsheet-theme');
 const storedStyle = localStorage.getItem('go-cheatsheet-theme-style');
 let activeMode = storedMode || 'light';
 let activeStyle = storedStyle || 'classic';
+let mascotEnabled = localStorage.getItem('go-cheatsheet-mascot') === 'true';
+let mascotTimer;
+
+const mascotMessages = [
+  'Tiny progress still counts.',
+  'You are building your own map. That matters.',
+  'One concept at a time.',
+  'Future you will love these notes.',
+  'Clean code starts with clear thoughts.',
+  'You do not need to know everything to keep going.',
+  'Small refactors are real wins.',
+  'Your curiosity is doing the heavy lifting.',
+  'Pause, breathe, then run it again.',
+  'Every confusing thing becomes a note eventually.',
+
+  'You are allowed to learn slowly. 🐢',
+  'The bug is not stronger than you.',
+  'Today’s confusion is tomorrow’s “ohhh”.',
+  'Write the messy note first. Polish later.',
+  'You showed up. That already counts.',
+  'One little commit is still a commit. 🌱',
+  'Your brain is compiling. Please wait...',
+  'Go gently. You are still learning.',
+  'A tiny note today can save future you an hour.',
+  'Not knowing yet is part of the process.',
+  'You are debugging more than code. You are debugging understanding.',
+  'This is hard, and you are doing it anyway.',
+  'Small steps. Big brain. Tiny gopher. 🐹',
+  'Your notes do not have to be perfect to be useful.',
+  'Every expert has a graveyard of confused notes.',
+  'Take the break. The code will still be here.',
+  'You are collecting little pieces of clarity.',
+  'Learning is just being confused more gracefully over time.',
+  'This page exists because you cared enough to write it.',
+  'The mascot believes in you. Obviously.',
+  'Progress is progress, even when it feels invisible.',
+  'One paragraph is better than a forgotten thought.',
+  'You are making the internet a little more helpful.',
+  'Document the chaos. Future you will decode it.',
+  'You are closer than when you opened this page.',
+  'Do not fear the red error text. It is just feedback.',
+  'Run it again. Maybe it was shy.',
+  'You are doing better than you think. :\')',
+  'Learning in public is brave.',
+  'A clear note is a gift to your future self.',
+  'The gopher says: hydrate and keep going. 💧',
+  'Confused? Perfect. That means there is something to learn.',
+  'Your effort is not wasted.',
+  'One solved problem becomes one less scary problem.',
+  'Keep going, little architect. 🛠️',
+  'You are turning “what?” into “got it.”',
+  'The best notes are written by someone who remembers being confused.',
+  'You do not need a perfect brain day to make progress.',
+  'Even 10 minutes can move the needle.',
+  'The bug blinked first.',
+  'You are building proof that you can figure things out.',
+  'Soft reminder: save your work. 💾',
+  'This is your little knowledge garden. 🌿',
+  'You are not behind. You are becoming.',
+  'A messy draft is a living draft.',
+  'The gopher has inspected your work and says: nice.',
+  'One day, this will feel obvious. Today is the bridge.',
+];
 
 function setTheme(style, mode) {
   activeStyle = style;
@@ -27,6 +93,54 @@ function setTheme(style, mode) {
 setTheme(activeStyle, activeMode);
 themeStyle.addEventListener('change', () => setTheme(themeStyle.value, activeMode));
 themeToggle.onclick = () => setTheme(activeStyle, activeMode === 'dark' ? 'light' : 'dark');
+
+function positionMascot() {
+  const maxLeft = Math.max(24, window.innerWidth - 280);
+  const maxTop = Math.max(140, window.innerHeight - 180);
+  const left = Math.floor(24 + Math.random() * (maxLeft - 24));
+  const top = Math.floor(120 + Math.random() * (maxTop - 120));
+
+  mascotPop.style.left = `${left}px`;
+  mascotPop.style.top = `${top}px`;
+}
+
+function showMascotMoment() {
+  if (!mascotEnabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  mascotMessage.textContent = mascotMessages[Math.floor(Math.random() * mascotMessages.length)];
+  positionMascot();
+  mascotPop.hidden = false;
+  window.setTimeout(() => {
+    mascotPop.hidden = true;
+  }, 8000);
+}
+
+function scheduleMascotMoment(delay = 1200) {
+  window.clearTimeout(mascotTimer);
+  if (!mascotEnabled) return;
+
+  mascotTimer = window.setTimeout(() => {
+    showMascotMoment();
+    scheduleMascotMoment(45000 + Math.random() * 45000);
+  }, delay);
+}
+
+function setMascotEnabled(enabled) {
+  mascotEnabled = enabled;
+  localStorage.setItem('go-cheatsheet-mascot', String(enabled));
+  mascotToggle.classList.toggle('active', enabled);
+  mascotToggle.setAttribute('aria-pressed', String(enabled));
+
+  if (enabled) {
+    scheduleMascotMoment(400);
+  } else {
+    window.clearTimeout(mascotTimer);
+    mascotPop.hidden = true;
+  }
+}
+
+setMascotEnabled(mascotEnabled);
+mascotToggle.addEventListener('click', () => setMascotEnabled(!mascotEnabled));
 
 const nav = document.getElementById('nav');
 const sectionsEl = document.getElementById('sections');
