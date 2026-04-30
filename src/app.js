@@ -32,6 +32,9 @@ const nav = document.getElementById('nav');
 const sectionsEl = document.getElementById('sections');
 const notesView = document.getElementById('notes-view');
 const toolbar = document.querySelector('.toolbar');
+const studyPackCount = document.getElementById('study-pack-count');
+const studyPackClear = document.getElementById('study-pack-clear');
+const studyPackDownload = document.getElementById('study-pack-download');
 const searchInput = document.getElementById('topic-search');
 const searchClear = document.getElementById('search-clear');
 const emptyState = document.getElementById('empty-state');
@@ -39,6 +42,7 @@ const resultStatus = document.getElementById('result-status');
 const viewTabs = [...document.querySelectorAll('[data-view]')];
 const levelButtons = [...document.querySelectorAll('[data-level-filter]')];
 const navButtons = [];
+const studyPackItems = new Map();
 let activeSectionId = sections[0].id;
 let activeLevel = 'all';
 
@@ -98,15 +102,49 @@ function renderSections() {
 }
 
 function renderNotesView(viewName) {
+  if (viewName === 'about') {
+    notesView.innerHTML = `
+      <p class="notes-intro">This started as a Go cheat sheet, then grew into a small learning hub: quick reference, personal notes, runnable examples, and Markdown export for people who like to keep obsidian notes (or any kind of notes) like me.</p>
+      <div class="about-list">
+        <article class="about-item">
+          <h2>Search, filters, and sections</h2>
+          <p>Use search when you know what you want, difficulty filters when you want a learning-level view, and section chips when you want to browse by topic. Every card has a difficulty level and a section label.</p>
+        </article>
+        <article class="about-item">
+          <h2>Copy and Run</h2>
+          <p>Copy grabs the visible snippet. Run is only shown on examples that have a complete runnable version; it copies that version and opens the Go Playground (you still need to paste it yourself!).</p>
+        </article>
+        <article class="about-item">
+          <h2>Shareable topic links</h2>
+          <p>The small # beside a card title creates a direct link to that topic, so you can save or share one exact card instead of pointing someone at the whole page.</p>
+        </article>
+        <article class="about-item">
+          <h2>Study packs</h2>
+          <p>Select cards or notes, then download them as one Markdown file. The idea is to make a portable study bundle that works nicely with Obsidian, GitHub, or any note-taking app that understands Markdown.</p>
+        </article>
+        <article class="about-item">
+          <h2>Field notes, idioms, and gotchas</h2>
+          <p>The extra tabs are curated from my own learning notes.</p>
+        </article>
+        <article class="about-item">
+          <h2>Themes</h2>
+          <p>Just to make things a bit cuter :3</p>
+        </article>
+      </div>
+    `;
+    notesView.setAttribute('aria-label', 'About this Go learning hub');
+    return;
+  }
+
   const viewLabels = {
     fieldNotes: 'Field Notes',
     idioms: 'Idioms',
     gotchas: 'Gotchas',
   };
   const intros = {
-    fieldNotes: 'Cleaned-up learning notes from the journey: mental models, web app flow, and practical reminders that do not belong in a terse cheat sheet.',
-    idioms: 'Style and convention notes that make Go code feel more natural in reviews and real projects.',
-    gotchas: 'Small traps and behavior notes that are easy to forget while learning Go.',
+    fieldNotes: 'Cleaned-up general learning notes, directly pulled from my personal Obsidian note collection.',
+    idioms: 'Style and convention notes that make Go code feel more natural in reviews and real projects, also from my personal notes but focused on common patterns rather than language features.',
+    gotchas: 'Again from my obsidian notes xD. Small traps and behavior notes that are easy to forget while learning Go.',
   };
   const cards = notes[viewName] || [];
 
@@ -114,7 +152,7 @@ function renderNotesView(viewName) {
     <p class="notes-intro">${intros[viewName]}</p>
     <div class="notes-grid">
       ${cards.map(card => `
-        <article class="note-card">
+        <article class="note-card" data-study-type="${viewName}" data-study-title="${card.title}" data-study-tags="${card.tags.join(',')}">
           <h2>${card.title}</h2>
           <div class="note-tags">
             ${card.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
@@ -125,6 +163,7 @@ function renderNotesView(viewName) {
     </div>
   `;
   notesView.setAttribute('aria-label', viewLabels[viewName]);
+  addStudySelectors(notesView);
 }
 
 function setActiveView(viewName) {
@@ -158,6 +197,9 @@ function addCardMetadata() {
 
     card.id = cardId;
     card.dataset.cardTitle = titleText;
+    card.dataset.studyType = 'Cheat Sheet';
+    card.dataset.studyTitle = titleText;
+    card.dataset.studyTags = [card.dataset.sectionLabel, level, isRunnable ? 'runnable' : ''].filter(Boolean).join(',');
     card.dataset.searchText = [
       titleText,
       card.dataset.sectionLabel,
@@ -182,6 +224,120 @@ function addCardMetadata() {
     ].join('');
     title.insertAdjacentElement('afterend', tags);
   });
+}
+
+function updateStudyPackBar() {
+  const count = studyPackItems.size;
+  studyPackCount.textContent = String(count);
+  studyPackDownload.disabled = count === 0;
+}
+
+function syncStudySelector(button, isSelected) {
+  button.classList.toggle('selected', isSelected);
+  button.textContent = isSelected ? 'Selected' : 'Add to study pack';
+  button.setAttribute('aria-pressed', String(isSelected));
+}
+
+function addStudySelectors(root = document) {
+  root.querySelectorAll('.card, .note-card').forEach(item => {
+    if (item.querySelector(':scope > .study-select')) return;
+
+    const id = item.id || `${item.dataset.studyType}-${slugify(item.dataset.studyTitle)}`;
+    item.dataset.studyId = id;
+
+    const button = document.createElement('button');
+    button.className = 'study-select';
+    button.type = 'button';
+    button.setAttribute('aria-pressed', 'false');
+    syncStudySelector(button, studyPackItems.has(id));
+
+    button.addEventListener('click', () => {
+      if (studyPackItems.has(id)) {
+        studyPackItems.delete(id);
+        syncStudySelector(button, false);
+      } else {
+        studyPackItems.set(id, getStudyPackItem(item));
+        syncStudySelector(button, true);
+      }
+      updateStudyPackBar();
+    });
+
+    item.prepend(button);
+  });
+}
+
+function escapeMarkdown(text) {
+  return text.replace(/#/g, '\\#');
+}
+
+function getStudyPackItem(item) {
+  return {
+    title: item.dataset.studyTitle || item.querySelector('.card-title, h2')?.textContent.trim(),
+    type: item.dataset.studyType || 'Go Note',
+    tags: (item.dataset.studyTags || '')
+      .split(',')
+      .map(tag => tag.trim().toLowerCase().replace(/\s+/g, '-'))
+      .filter(Boolean),
+    content: htmlToMarkdown(item),
+  };
+}
+
+function htmlToMarkdown(element) {
+  const clone = element.cloneNode(true);
+  clone.querySelectorAll('button, .snippet-actions, .card-link').forEach(node => node.remove());
+  clone.querySelectorAll('pre').forEach(pre => {
+    pre.replaceWith(document.createTextNode(`\n\n\`\`\`go\n${pre.textContent.trim()}\n\`\`\`\n\n`));
+  });
+  clone.querySelectorAll('code').forEach(code => {
+    code.replaceWith(document.createTextNode(`\`${code.textContent}\``));
+  });
+  clone.querySelectorAll('li').forEach(li => {
+    li.prepend(document.createTextNode('- '));
+    li.append(document.createTextNode('\n'));
+  });
+  clone.querySelectorAll('p,h2,ol,ul,div').forEach(node => {
+    node.append(document.createTextNode('\n'));
+  });
+  return clone.textContent
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function buildStudyPackMarkdown() {
+  const created = new Date().toISOString().slice(0, 10);
+  const sections = [...studyPackItems.values()].map(item => {
+    const tagLine = ['go', ...item.tags].map(tag => `#${tag}`).join(' ');
+
+    return `## ${escapeMarkdown(item.title)}\n\n> Source: ${item.type}\n> Tags: ${tagLine}\n\n${item.content}`;
+  });
+
+  return `# Go Study Pack\n\nCreated: ${created}\nTags: #go #study-pack\n\n${sections.join('\n\n---\n\n')}\n`;
+}
+
+function downloadStudyPack() {
+  if (studyPackItems.size === 0) return;
+
+  const blob = new Blob([buildStudyPackMarkdown()], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'go-study-pack.md';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function clearStudyPack() {
+  studyPackItems.clear();
+  document.querySelectorAll('.study-select').forEach(button => syncStudySelector(button, false));
+  updateStudyPackBar();
+}
+
+function bindStudyPackControls() {
+  studyPackClear.addEventListener('click', clearStudyPack);
+  studyPackDownload.addEventListener('click', downloadStudyPack);
+  updateStudyPackBar();
 }
 
 function resetFilters() {
@@ -339,9 +495,11 @@ function addSnippetActions() {
 
 renderSections();
 addCardMetadata();
+addStudySelectors();
 addSnippetActions();
 bindFilterControls();
 bindViewTabs();
+bindStudyPackControls();
 openCardFromHash();
   window.addEventListener('hashchange', openCardFromHash);
 }
