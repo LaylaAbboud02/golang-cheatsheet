@@ -1770,6 +1770,7 @@ const sectionsEl = document.getElementById('sections');
 const searchInput = document.getElementById('topic-search');
 const searchClear = document.getElementById('search-clear');
 const emptyState = document.getElementById('empty-state');
+const resultStatus = document.getElementById('result-status');
 const levelButtons = [...document.querySelectorAll('[data-level-filter]')];
 const navButtons = [];
 let activeSectionId = sections[0].id;
@@ -2026,6 +2027,18 @@ func main() {
 `,
 };
 
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function formatLevel(level) {
+  return level.charAt(0).toUpperCase() + level.slice(1);
+}
+
 function setActiveSection(sectionId) {
   activeSectionId = sectionId;
   navButtons.forEach(({ button, id }) => {
@@ -2065,11 +2078,56 @@ sections.forEach((s, i) => {
   div.innerHTML = s.content;
   div.dataset.sectionLabel = s.label.toLowerCase();
   div.dataset.level = sectionLevels[s.id] || 'intermediate';
+
+  const resultTitle = document.createElement('div');
+  resultTitle.className = 'section-result-title';
+  resultTitle.textContent = s.label;
+  div.prepend(resultTitle);
+
   div.querySelectorAll('.card').forEach(card => {
     card.dataset.level = div.dataset.level;
+    card.dataset.sectionId = s.id;
+    card.dataset.sectionLabel = s.label;
   });
   sectionsEl.appendChild(div);
 });
+
+function addCardMetadata() {
+  document.querySelectorAll('.card').forEach(card => {
+    const title = card.querySelector('.card-title');
+    const titleText = title.textContent.trim();
+    const sectionId = card.dataset.sectionId;
+    const level = card.dataset.level;
+    const cardId = `${sectionId}-${slugify(titleText)}`;
+    const isRunnable = Boolean(playgroundExamples[titleText]);
+
+    card.id = cardId;
+    card.dataset.cardTitle = titleText;
+    card.dataset.searchText = [
+      titleText,
+      card.dataset.sectionLabel,
+      level,
+      isRunnable ? 'runnable playground run' : '',
+      card.textContent,
+    ].join(' ').toLowerCase();
+
+    const link = document.createElement('a');
+    link.className = 'card-link';
+    link.href = '#' + cardId;
+    link.setAttribute('aria-label', `Link to ${titleText}`);
+    link.textContent = '#';
+    title.appendChild(link);
+
+    const tags = document.createElement('div');
+    tags.className = 'card-tags';
+    tags.innerHTML = [
+      `<span class="tag tag-level">${formatLevel(level)}</span>`,
+      `<span class="tag">${card.dataset.sectionLabel}</span>`,
+      isRunnable ? '<span class="tag">Runnable</span>' : '',
+    ].join('');
+    title.insertAdjacentElement('afterend', tags);
+  });
+}
 
 function resetFilters() {
   document.querySelectorAll('.section').forEach(section => {
@@ -2083,6 +2141,7 @@ function resetFilters() {
   });
   emptyState.hidden = true;
   searchClear.hidden = !searchInput.value;
+  resultStatus.textContent = '';
   setActiveSection(activeSectionId);
 }
 
@@ -2106,6 +2165,7 @@ function applyFilters() {
 
   navButtons.forEach(({ button, id, label }) => {
     const section = document.getElementById('sec-' + id);
+    const sectionResultTitle = section.querySelector('.section-result-title');
     let visibleCards = 0;
 
     button.classList.remove('active');
@@ -2113,7 +2173,7 @@ function applyFilters() {
 
     section.querySelectorAll('.card').forEach(card => {
       const levelMatches = activeLevel === 'all' || card.dataset.level === activeLevel;
-      const queryMatches = !query || label.includes(query) || card.textContent.toLowerCase().includes(query);
+      const queryMatches = !query || label.includes(query) || card.dataset.searchText.includes(query);
       const isVisible = levelMatches && queryMatches;
 
       card.hidden = !isVisible;
@@ -2125,9 +2185,13 @@ function applyFilters() {
 
     button.hidden = visibleCards === 0;
     section.classList.toggle('search-match', visibleCards > 0);
+    if (sectionResultTitle) {
+      sectionResultTitle.textContent = `${button.textContent} (${visibleCards})`;
+    }
   });
 
   emptyState.hidden = matchCount > 0;
+  resultStatus.textContent = `${matchCount} matching topic${matchCount === 1 ? '' : 's'}`;
 }
 
 searchInput.addEventListener('input', applyFilters);
@@ -2142,6 +2206,19 @@ levelButtons.forEach(button => {
     applyFilters();
   });
 });
+
+function openCardFromHash() {
+  const cardId = window.location.hash.slice(1);
+  if (!cardId) return;
+
+  const card = document.getElementById(cardId);
+  if (!card) return;
+
+  const section = card.closest('.section');
+  clearFilters();
+  setActiveSection(section.id.replace('sec-', ''));
+  window.setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+}
 
 async function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) {
@@ -2173,7 +2250,7 @@ function setTemporaryButtonState(button, text, className = 'copied') {
 
 function addSnippetActions() {
   document.querySelectorAll('pre').forEach((pre) => {
-    const cardTitle = pre.closest('.card')?.querySelector('.card-title')?.textContent.trim();
+    const cardTitle = pre.closest('.card')?.dataset.cardTitle;
     const runnableCode = playgroundExamples[cardTitle];
     const wrapper = document.createElement('div');
     wrapper.className = 'code-block';
@@ -2223,4 +2300,7 @@ function addSnippetActions() {
   });
 }
 
+addCardMetadata();
 addSnippetActions();
+openCardFromHash();
+window.addEventListener('hashchange', openCardFromHash);
