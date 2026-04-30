@@ -18,7 +18,17 @@
             <p>Practical reference for Go 1.22+</p>
           </div>
         </div>
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Night mode</button>
+        <div class="theme-controls" aria-label="Theme controls">
+          <label class="theme-field">
+            <span>Style</span>
+            <select id="theme-style">
+              <option value="classic">Go Classic</option>
+              <option value="kawaii">Kawaii Desk</option>
+              <option value="terminal">Terminal</option>
+            </select>
+          </label>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Dark</button>
+        </div>
       </div>
     </header>
 

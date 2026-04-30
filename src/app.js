@@ -6,18 +6,27 @@ function initApp() {
   const { copyText, formatLevel, setTemporaryButtonState, slugify } = window.cheatSheetUtils;
 
   const themeToggle = document.getElementById('theme-toggle');
-const storedTheme = localStorage.getItem('go-cheatsheet-theme');
-const initialTheme = storedTheme || 'light';
+const themeStyle = document.getElementById('theme-style');
+const storedMode = localStorage.getItem('go-cheatsheet-theme-mode') || localStorage.getItem('go-cheatsheet-theme');
+const storedStyle = localStorage.getItem('go-cheatsheet-theme-style');
+let activeMode = storedMode || 'light';
+let activeStyle = storedStyle || 'classic';
 
-function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  localStorage.setItem('go-cheatsheet-theme', theme);
-  themeToggle.textContent = theme === 'dark' ? 'Day mode' : 'Night mode';
-  themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+function setTheme(style, mode) {
+  activeStyle = style;
+  activeMode = mode;
+  document.documentElement.dataset.style = style;
+  document.documentElement.dataset.theme = mode;
+  localStorage.setItem('go-cheatsheet-theme-style', style);
+  localStorage.setItem('go-cheatsheet-theme-mode', mode);
+  themeStyle.value = style;
+  themeToggle.textContent = mode === 'dark' ? 'Light' : 'Dark';
+  themeToggle.setAttribute('aria-pressed', String(mode === 'dark'));
 }
 
-setTheme(initialTheme);
-themeToggle.onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+setTheme(activeStyle, activeMode);
+themeStyle.addEventListener('change', () => setTheme(themeStyle.value, activeMode));
+themeToggle.onclick = () => setTheme(activeStyle, activeMode === 'dark' ? 'light' : 'dark');
 
 const nav = document.getElementById('nav');
 const sectionsEl = document.getElementById('sections');
