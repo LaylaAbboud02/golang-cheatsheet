@@ -1,77 +1,3 @@
-
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    color-scheme:light;
-    --go-cyan:#00ADD8;--go-dark:#00758D;--go-light:#E0F7FC;
-    --color-background-primary:#ffffff;--color-background-secondary:#f8f9fa;--color-background-tertiary:#f1f3f5;
-    --color-text-primary:#212529;--color-text-secondary:#6c757d;--color-text-tertiary:#adb5bd;
-    --color-border-primary:#dee2e6;--color-border-secondary:#ced4da;--color-border-tertiary:#e9ecef;
-    --bg:var(--color-background-primary);--bg2:var(--color-background-secondary);--bg3:var(--color-background-tertiary);
-    --text:var(--color-text-primary);--muted:var(--color-text-secondary);--hint:var(--color-text-tertiary);
-    --border:var(--color-border-tertiary);--border2:var(--color-border-secondary);
-  }
-  html[data-theme="dark"]{color-scheme:dark;--go-cyan:#5FD7F3;--go-dark:#77DDF7;--go-light:#102A33;--color-background-primary:#0F1419;--color-background-secondary:#161D24;--color-background-tertiary:#202A33;--color-text-primary:#EEF4F7;--color-text-secondary:#A6B4BE;--color-text-tertiary:#6F7F89;--color-border-primary:#34424C;--color-border-secondary:#43545F;--color-border-tertiary:#2A3640}
-  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);padding:0;min-height:100vh;transition:background .2s ease,color .2s ease}
-  .header{padding:2rem 0 1.5rem;border-bottom:1.5px solid var(--go-cyan);margin-bottom:1.5rem}
-  .header-brand{display:flex;align-items:center;gap:1rem}
-  .header-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.5rem;flex-wrap:wrap}
-  .go-logo{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;color:var(--go-cyan);letter-spacing:-2px}
-  .header h1{font-size:1.6rem;font-weight:800;letter-spacing:-0.5px}
-  .header p{font-size:.85rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
-  .nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem}
-  .nav-btn,.theme-toggle{font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:5px 10px;border-radius:4px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .15s}
-  .theme-toggle{display:inline-flex;align-items:center;gap:7px;margin-left:auto;color:var(--text)}
-  .theme-toggle::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--go-cyan);box-shadow:0 0 0 3px var(--go-light)}
-  .theme-toggle:hover{border-color:var(--go-cyan);color:var(--go-cyan)}
-  html[data-theme="dark"] .theme-toggle{background:var(--bg3);border-color:var(--border2)}
-  .nav-btn:hover,.nav-btn.active{background:var(--go-cyan);color:#fff;border-color:var(--go-cyan)}
-  .section{display:none;animation:fadeIn .2s ease}
-  .section.active{display:block}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-  .section-title{font-size:1.1rem;font-weight:700;color:var(--go-cyan);margin-bottom:1rem;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
-  .section-title::before{content:'//';color:var(--border2);font-weight:400}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
-  .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
-  .card{background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:1rem;overflow:hidden}
-  .card-title{font-size:.78rem;font-weight:600;color:var(--go-cyan);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-family:'JetBrains Mono',monospace}
-  pre{font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:1.6;white-space:pre;overflow-x:auto;background:var(--bg3);border-radius:6px;padding:.8rem;border:0.5px solid var(--border);margin:.5rem 0}
-  code{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--go-dark)}
-  .kw{color:#CF8A2B}.fn{color:var(--go-cyan)}.cm{color:var(--hint);font-style:italic}.str{color:#7CB37B}.typ{color:#B07ED6}.num{color:#CF8A2B}.pkg{color:#E07A4A}
-  .badge{display:inline-block;font-size:.68rem;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:3px;font-weight:500;margin-left:6px}
-  .badge-blue{background:#E6F1FB;color:#185FA5}.badge-green{background:#EAF3DE;color:#3B6D11}.badge-amber{background:#FAEEDA;color:#854F0B}.badge-red{background:#FCEBEB;color:#A32D2D}
-  html[data-theme="dark"] .badge-blue{background:#0C447C;color:#B5D4F4}html[data-theme="dark"] .badge-green{background:#27500A;color:#C0DD97}html[data-theme="dark"] .badge-amber{background:#633806;color:#FAC775}html[data-theme="dark"] .badge-red{background:#791F1F;color:#F7C1C1}html[data-theme="dark"] .kw{color:#F0C05A}html[data-theme="dark"] .fn{color:#5FC8E8}html[data-theme="dark"] .str{color:#7EC880}html[data-theme="dark"] .typ{color:#C89FE0}html[data-theme="dark"] .pkg{color:#F09A6A}html[data-theme="dark"] .num{color:#F0C05A}html[data-theme="dark"] .cm{color:#82919A}
-  .tip{background:var(--bg2);border-left:3px solid var(--go-cyan);border-radius:0 6px 6px 0;padding:.7rem 1rem;font-size:.8rem;color:var(--muted);margin:.75rem 0;font-family:'JetBrains Mono',monospace}
-  .tip strong{color:var(--text);font-weight:600}
-  .warn{background:var(--bg2);border-left:3px solid #E24B4A;border-radius:0 6px 6px 0;padding:.7rem 1rem;font-size:.8rem;color:var(--muted);margin:.75rem 0;font-family:'JetBrains Mono',monospace}
-  .full{grid-column:1/-1}
-  .inline-list{list-style:none;font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:2}
-  .inline-list li::before{content:'→ ';color:var(--go-cyan)}
-  .table{width:100%;border-collapse:collapse;font-size:.78rem;font-family:'JetBrains Mono',monospace;margin:.5rem 0}
-  .table th{text-align:left;padding:6px 10px;background:var(--bg3);color:var(--muted);font-weight:500;border-bottom:0.5px solid var(--border)}
-  .table td{padding:6px 10px;border-bottom:0.5px solid var(--border);vertical-align:top}
-  .table tr:last-child td{border-bottom:none}
-  .table td:first-child{color:var(--go-cyan)}
-</style>
-
-<div class="header">
-  <div class="header-top">
-    <div class="header-brand">
-      <div class="go-logo">Go</div>
-      <div>
-        <h1>Golang Cheat Sheet</h1>
-        <p>// senior-level reference · go 1.22+</p>
-      </div>
-    </div>
-    <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Night mode</button>
-  </div>
-</div>
-
-<div class="nav" id="nav"></div>
-<div id="sections"></div>
-
-<script>
 const sections = [
 {id:'basics',label:'Basics',content:`
 <div class="grid">
@@ -1841,23 +1767,147 @@ themeToggle.onclick = () => setTheme(document.documentElement.dataset.theme === 
 
 const nav = document.getElementById('nav');
 const sectionsEl = document.getElementById('sections');
+const searchInput = document.getElementById('topic-search');
+const searchClear = document.getElementById('search-clear');
+const emptyState = document.getElementById('empty-state');
+const navButtons = [];
+let activeSectionId = sections[0].id;
+
+function setActiveSection(sectionId) {
+  activeSectionId = sectionId;
+  navButtons.forEach(({ button, id }) => {
+    const isActive = id === sectionId;
+    button.classList.toggle('active', isActive);
+    document.getElementById('sec-' + id).classList.toggle('active', isActive);
+  });
+}
 
 sections.forEach((s, i) => {
   const btn = document.createElement('button');
   btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
   btn.textContent = s.label;
   btn.onclick = () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('sec-' + s.id).classList.add('active');
+    clearSearch();
+    setActiveSection(s.id);
   };
+  navButtons.push({ button: btn, id: s.id, label: s.label.toLowerCase() });
   nav.appendChild(btn);
 
   const div = document.createElement('div');
   div.id = 'sec-' + s.id;
   div.className = 'section' + (i === 0 ? ' active' : '');
   div.innerHTML = s.content;
+  div.dataset.sectionLabel = s.label.toLowerCase();
   sectionsEl.appendChild(div);
 });
-</script>
+
+function resetSearchResults() {
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.remove('search-match');
+  });
+  document.querySelectorAll('.card').forEach(card => {
+    card.hidden = false;
+  });
+  navButtons.forEach(({ button }) => {
+    button.hidden = false;
+  });
+  emptyState.hidden = true;
+  searchClear.hidden = true;
+  setActiveSection(activeSectionId);
+}
+
+function clearSearch() {
+  if (!searchInput.value) return;
+  searchInput.value = '';
+  resetSearchResults();
+}
+
+function applySearch() {
+  const query = searchInput.value.trim().toLowerCase();
+
+  if (!query) {
+    resetSearchResults();
+    return;
+  }
+
+  let matchCount = 0;
+  searchClear.hidden = false;
+
+  navButtons.forEach(({ button, id, label }) => {
+    const section = document.getElementById('sec-' + id);
+    const sectionMatches = label.includes(query) || section.textContent.toLowerCase().includes(query);
+
+    button.hidden = !sectionMatches;
+    button.classList.remove('active');
+    section.classList.remove('active');
+    section.classList.toggle('search-match', sectionMatches);
+
+    section.querySelectorAll('.card').forEach(card => {
+      const cardMatches = label.includes(query) || card.textContent.toLowerCase().includes(query);
+      card.hidden = !cardMatches;
+      if (cardMatches) matchCount += 1;
+    });
+  });
+
+  emptyState.hidden = matchCount > 0;
+}
+
+searchInput.addEventListener('input', applySearch);
+searchClear.addEventListener('click', () => {
+  clearSearch();
+  setActiveSection(sections[0].id);
+  searchInput.focus();
+});
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
+}
+
+function addCopyButtons() {
+  document.querySelectorAll('pre').forEach((pre) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+
+    const button = document.createElement('button');
+    button.className = 'copy-btn';
+    button.type = 'button';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', 'Copy code snippet');
+
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+    wrapper.appendChild(button);
+
+    button.addEventListener('click', async () => {
+      const originalText = button.textContent;
+
+      try {
+        await copyText(pre.textContent.trim());
+        button.textContent = 'Copied';
+        button.classList.add('copied');
+      } catch {
+        button.textContent = 'Failed';
+      }
+
+      window.setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+      }, 1200);
+    });
+  });
+}
+
+addCopyButtons();

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A single-page Go reference with quick examples for syntax, tooling, standard library patterns, and common workflows.">
+  <title>Golang Cheat Sheet</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div class="header-top">
+        <div class="header-brand">
+          <div class="go-logo">Go</div>
+          <div>
+            <h1>Golang Cheat Sheet</h1>
+            <p>// senior-level reference · go 1.22+</p>
+          </div>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Night mode</button>
+      </div>
+    </header>
+
+    <div class="search-panel">
+      <label class="search-label" for="topic-search">Search topics</label>
+      <div class="search-row">
+        <input class="search-input" id="topic-search" type="search" placeholder="Search syntax, slices, goroutines, testing..." autocomplete="off">
+        <button class="search-clear" id="search-clear" type="button" aria-label="Clear search" hidden>Clear</button>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav" aria-label="Cheat sheet sections"></nav>
+    <p class="empty-state" id="empty-state" hidden>No matching topics found.</p>
+    <div id="sections"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
